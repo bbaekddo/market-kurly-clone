@@ -1,0 +1,372 @@
+﻿-- 테이블 순서는 관계를 고려하여 한 번에 실행해도 에러가 발생하지 않게 정렬되었습니다.
+
+-- vendors Table Create SQL
+CREATE TABLE vendors
+(
+    `id`           INT            NOT NULL    AUTO_INCREMENT COMMENT '상품 판매 회사 ID', 
+    `name`         VARCHAR(30)    NOT NULL    COMMENT '판매 회사 이름', 
+    `description`  TEXT           NULL        DEFAULT NULL COMMENT '판매 회사 설명', 
+    `create_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`       VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE vendors COMMENT '상품 판매 회사';
+
+CREATE UNIQUE INDEX UQ_vendors_1
+    ON vendors(name);
+
+
+-- post_images Table Create SQL
+CREATE TABLE post_images
+(
+    `id`         BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '상품 대표 사진 ID', 
+    `data`       TEXT           NULL        DEFAULT NULL COMMENT '이미지 URL', 
+    `create_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`     VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE post_images COMMENT '상품 대표 사진';
+
+
+-- categories Table Create SQL
+CREATE TABLE categories
+(
+    `id`          TINYINT        NOT NULL    AUTO_INCREMENT COMMENT '카테고리 ID', 
+    `main_class`  VARCHAR(20)    NOT NULL    COMMENT '대분류', 
+    `sub_class`   VARCHAR(30)    NOT NULL    COMMENT '중분류', 
+    `create_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`      VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE categories COMMENT '상품 카테고리';
+
+CREATE UNIQUE INDEX UQ_categories_1
+    ON categories(sub_class);
+
+
+-- posts Table Create SQL
+CREATE TABLE posts
+(
+    `id`           BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '상품 게시글 ID', 
+    `image_id`     BIGINT         NOT NULL    COMMENT '상품 대표 사진 ID', 
+    `vendor_id`    INT            NOT NULL    COMMENT '상품 판매 회사 ID', 
+    `title`       VARCHAR(30)    NOT NULL    COMMENT '상품 제목', 
+    `intro`        VARCHAR(50)    NOT NULL    COMMENT '상품 소개', 
+    `title_price`  INT            NOT NULL    COMMENT '원(₩) 기준', 
+    `off`          INT            NOT NULL    DEFAULT 5 COMMENT '백분율 단위', 
+    `create_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`       VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE posts COMMENT '상품 게시글';
+
+ALTER TABLE posts
+    ADD CONSTRAINT FK_posts_image_id_post_images_id FOREIGN KEY (image_id)
+        REFERENCES post_images (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE posts
+    ADD CONSTRAINT FK_posts_vendor_id_vendors_id FOREIGN KEY (vendor_id)
+        REFERENCES vendors (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- items Table Create SQL
+CREATE TABLE items
+(
+    `id`           BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '상품 ID', 
+    `post_id`      BIGINT         NOT NULL    COMMENT '상품 게시글 ID', 
+    `category_id`  TINYINT        NOT NULL    COMMENT '카테고리 ID', 
+    `name`         VARCHAR(30)    NOT NULL    COMMENT '상품 이름', 
+    `price`        INT            NOT NULL    COMMENT '상품 가격', 
+    `gift_enable`  TINYINT(1)     NOT NULL    DEFAULT FALSE COMMENT 'TRUE : 가능 / FALSE : 불가능', 
+    `create_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`       VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE items COMMENT '상품 정보';
+
+ALTER TABLE items
+    ADD CONSTRAINT FK_items_post_id_posts_id FOREIGN KEY (post_id)
+        REFERENCES posts (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE items
+    ADD CONSTRAINT FK_items_category_id_categories_id FOREIGN KEY (category_id)
+        REFERENCES categories (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- users Table Create SQL
+CREATE TABLE users
+(
+    `id`         INT              NOT NULL    AUTO_INCREMENT COMMENT '사용자 Index', 
+    `user_id`    VARCHAR(20)      NOT NULL    COMMENT '특수문자 X', 
+    `password`   TEXT             NOT NULL    COMMENT '특수문자 포함, 10~20 자리', 
+    `name`       VARCHAR(10)      NOT NULL    COMMENT '특수문자 X', 
+    `email`      TEXT             NOT NULL    COMMENT '형식 체크', 
+    `phone`      TEXT             NOT NULL    COMMENT '사용자 휴대폰 번호', 
+    `address`    TEXT             NULL        DEFAULT NULL COMMENT '주문하기 전 체크', 
+    `birthday`   DATE             NULL        DEFAULT NULL COMMENT '사용자 생년월일', 
+    `gender`     VARCHAR(10)      NULL        DEFAULT NULL COMMENT 'MALE / FEMALE', 
+    `mileage`    DECIMAL(3, 1)    NOT NULL    DEFAULT 0.5 COMMENT '사용자 적립률', 
+    `create_at`  TIMESTAMP        NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`  TIMESTAMP        NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`     VARCHAR(10)      NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+    CONSTRAINT PK_Users PRIMARY KEY (id)
+);
+
+ALTER TABLE users COMMENT '사용자 정보';
+
+CREATE UNIQUE INDEX UQ_users_1
+    ON users(user_id);
+
+
+-- baskets Table Create SQL
+CREATE TABLE baskets
+(
+    `id`          INT            NOT NULL    AUTO_INCREMENT COMMENT '장바구니 ID', 
+    `user_index`  INT            NOT NULL    COMMENT '사용자 Index', 
+    `item_id`     BIGINT         NOT NULL    COMMENT '상품 ID', 
+    `quantity`    SMALLINT       NOT NULL    DEFAULT 0 COMMENT '상품 수량', 
+    `create_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`      VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE baskets COMMENT '장바구니';
+
+ALTER TABLE baskets
+    ADD CONSTRAINT FK_baskets_user_index_users_id FOREIGN KEY (user_index)
+        REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE baskets
+    ADD CONSTRAINT FK_baskets_item_id_items_id FOREIGN KEY (item_id)
+        REFERENCES items (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- MDs Table Create SQL
+CREATE TABLE MDs
+(
+    `id`         INT            NOT NULL    AUTO_INCREMENT COMMENT 'MD Index', 
+    `MD_id`      VARCHAR(20)    NOT NULL    COMMENT '특수문자 X', 
+    `password`   TEXT           NOT NULL    COMMENT '특수문자 포함, 10~20 자리', 
+    `nickname`   VARCHAR(10)    NOT NULL    COMMENT 'MD 닉네임', 
+    `email`      TEXT           NOT NULL    COMMENT '형식 체크', 
+    `create_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`     VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE MDs COMMENT 'MD 정보';
+
+
+-- questions Table Create SQL
+CREATE TABLE questions
+(
+    `id`          BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '상품 문의 ID', 
+    `user_index`  INT            NOT NULL    COMMENT '사용자 Index', 
+    `item_id`     BIGINT         NOT NULL    COMMENT '상품 ID', 
+    `title`      VARCHAR(30)    NOT NULL    COMMENT '상품 문의 제목', 
+    `content`     TEXT           NOT NULL    COMMENT '상품 문의 내용', 
+    `create_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`      VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE questions COMMENT '상품 문의';
+
+ALTER TABLE questions
+    ADD CONSTRAINT FK_questions_user_index_users_id FOREIGN KEY (user_index)
+        REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE questions
+    ADD CONSTRAINT FK_questions_item_id_items_id FOREIGN KEY (item_id)
+        REFERENCES items (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- replies Table Create SQL
+CREATE TABLE replies
+(
+    `id`           BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '상품 문의 답변 ID', 
+    `vendor_id`    INT            NOT NULL    COMMENT '상품 판매 회사 ID', 
+    `question_id`  BIGINT         NOT NULL    COMMENT '상품 문의 ID', 
+    `title`       VARCHAR(30)    NOT NULL    COMMENT '상품 문의 답변 제목', 
+    `content`      TEXT           NOT NULL    COMMENT '상품 문의 답변 내용', 
+    `create_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`    TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`       VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE replies COMMENT '상품 문의 답변';
+
+ALTER TABLE replies
+    ADD CONSTRAINT FK_replies_vendor_id_vendors_id FOREIGN KEY (vendor_id)
+        REFERENCES vendors (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE replies
+    ADD CONSTRAINT FK_replies_question_id_questions_id FOREIGN KEY (question_id)
+        REFERENCES questions (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- random_items Table Create SQL
+CREATE TABLE random_items
+(
+    `id`         BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '랜덤 추천 상품 ID', 
+    `post_id`    BIGINT         NOT NULL    COMMENT '상품 게시글 ID', 
+    `create_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`     VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE random_items COMMENT '랜덤 추천 상품';
+
+ALTER TABLE random_items
+    ADD CONSTRAINT FK_random_items_post_id_posts_id FOREIGN KEY (post_id)
+        REFERENCES posts (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- deal_items Table Create SQL
+CREATE TABLE deal_items
+(
+    `id`         BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '일일 특가 상품 ID', 
+    `post_id`    BIGINT         NOT NULL    COMMENT '상품 게시글 ID', 
+    `create_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`     VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE deal_items COMMENT '일일 특가 상품';
+
+ALTER TABLE deal_items
+    ADD CONSTRAINT FK_deal_items_post_id_posts_id FOREIGN KEY (post_id)
+        REFERENCES posts (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- recommend_items Table Create SQL
+CREATE TABLE recommend_items
+(
+    `id`         BIGINT         NOT NULL    AUTO_INCREMENT COMMENT 'MD 추천 상품 ID', 
+    `md_index`   INT            NOT NULL    COMMENT 'MD Index', 
+    `post_id`    BIGINT         NOT NULL    COMMENT '상품 게시글 ID', 
+    `create_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`     VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE recommend_items COMMENT 'MD 추천 상품';
+
+ALTER TABLE recommend_items
+    ADD CONSTRAINT FK_recommend_items_md_index_MDs_id FOREIGN KEY (md_index)
+        REFERENCES MDs (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE recommend_items
+    ADD CONSTRAINT FK_recommend_items_post_id_posts_id FOREIGN KEY (post_id)
+        REFERENCES posts (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- order_lists Table Create SQL
+CREATE TABLE order_lists
+(
+    `id`          BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '주문 목록 ID', 
+    `user_index`  INT            NOT NULL    COMMENT '사용자 Index', 
+    `basket_id`   INT            NOT NULL    COMMENT '장바구니 ID', 
+    `group`       INT            NOT NULL    COMMENT '장바구니에 담은 모든 상품은 같은 그룹', 
+    `pay`        VARCHAR(10)    NOT NULL    COMMENT 'KAKAOPAY / CREDITCARD / SIMPLEPAY / PHONE', 
+    `create_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`      VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE order_lists COMMENT '주문 목록';
+
+ALTER TABLE order_lists
+    ADD CONSTRAINT FK_order_lists_basket_id_baskets_id FOREIGN KEY (basket_id)
+        REFERENCES baskets (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE order_lists
+    ADD CONSTRAINT FK_order_lists_user_index_users_id FOREIGN KEY (user_index)
+        REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- reviews Table Create SQL
+CREATE TABLE reviews
+(
+    `id`          BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '상품 후기 ID', 
+    `user_index`  INT            NOT NULL    COMMENT '사용자 Index', 
+    `item_id`     BIGINT         NOT NULL    COMMENT '상품 ID', 
+    `title`      VARCHAR(30)    NOT NULL    COMMENT '상품 후기 제목', 
+    `content`     TEXT           NULL        DEFAULT NULL COMMENT '상품 후기 내용', 
+    `create_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`      VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE reviews COMMENT '상품 후기';
+
+ALTER TABLE reviews
+    ADD CONSTRAINT FK_reviews_user_index_users_id FOREIGN KEY (user_index)
+        REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE reviews
+    ADD CONSTRAINT FK_reviews_item_id_items_id FOREIGN KEY (item_id)
+        REFERENCES items (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- watchlists Table Create SQL
+CREATE TABLE watchlists
+(
+    `id`          BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '찜한 상품 ID', 
+    `user_index`  INT            NOT NULL    COMMENT '사용자 Index', 
+    `post_id`     BIGINT         NOT NULL    COMMENT '상품 게시글 ID', 
+    `create_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`   TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`      VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE watchlists COMMENT '찜한 상품';
+
+ALTER TABLE watchlists
+    ADD CONSTRAINT FK_watchlists_user_index_users_id FOREIGN KEY (user_index)
+        REFERENCES users (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+ALTER TABLE watchlists
+    ADD CONSTRAINT FK_watchlists_post_id_posts_id FOREIGN KEY (post_id)
+        REFERENCES posts (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
+-- item_images Table Create SQL
+CREATE TABLE item_images
+(
+    `id`         BIGINT         NOT NULL    AUTO_INCREMENT COMMENT '상품 사진 ID', 
+    `item_id`    BIGINT         NOT NULL    COMMENT '상품 ID', 
+    `data`       TEXT           NULL        DEFAULT NULL COMMENT '이미지 URL', 
+    `create_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP COMMENT '생성일자', 
+    `update_at`  TIMESTAMP      NOT NULL    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일자', 
+    `status`     VARCHAR(10)    NOT NULL    DEFAULT 'RUN' COMMENT 'RUN / STOP / DELETED', 
+     PRIMARY KEY (id)
+);
+
+ALTER TABLE item_images COMMENT '상품 사진';
+
+ALTER TABLE item_images
+    ADD CONSTRAINT FK_item_images_item_id_items_id FOREIGN KEY (item_id)
+        REFERENCES items (id) ON DELETE RESTRICT ON UPDATE RESTRICT;
+
+
